@@ -28,11 +28,21 @@ async function run() {
     pull_number: prNumber
   });
 
-  const diff = files.map(f => f.patch).filter(Boolean).join("\n");
-  if (!diff) {
+  //const diff = files.map(f => f.patch).filter(Boolean).join("\n");
+  //if (!diff) {
+  //  console.log("No diff to review.");
+  //  return;
+  //}
+  const diff = files
+  .map(f => f.patch)
+  .filter(Boolean)
+  .map(d => d.split("\n").slice(0, 50).join("\n")) // first 50 lines only
+  .join("\n");
+    if (!diff) {
     console.log("No diff to review.");
     return;
   }
+
 
   // Step 3: Send diff to OpenAI GPT for review
   const response = await openai.chat.completions.create({
