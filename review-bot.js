@@ -1,20 +1,62 @@
-// review-bot.js
 const { Octokit } = require("@octokit/rest");
+const OpenAI = require("openai"); // make sure to npm install openai
 
-const token = process.env.GITHUB_TOKEN; // GitHub provides this in Actions
-const octokit = new Octokit({ auth: token });
+// GitHub & OpenAI tokens
+const githubToken = process.env.GITHUB_TOKEN;
+const openaiKey = process.env.OPENAI_API_KEY;
 
-// These will be passed from GitHub Actions
-const [owner, repo, pull_number] = process.env.GITHUB_REPOSITORY.split("/");
+const octokit = new Octokit({ auth: githubToken });
+const openai = new OpenAI({ apiKey: openaiKey });
+
+// GitHub repo & PR info
+const [owner, repo] = process.env.GITHUB_REPOSITORY.split("/");
 const prNumber = process.env.PR_NUMBER;
 
 async function run() {
+  // Step 1: Post initial comment
   await octokit.issues.createComment({
     owner,
     repo,
     issue_number: prNumber,
     body: "👋 Thanks for the PR! The bot is reviewing your code..."
   });
+
+  // Step 2: Fetch changed files and diffs
+  const { data: files } = await octokit.pulls.listFiles({
+    owner,
+    repo,
+    pull_number: prNumber
+  });
+
+  const diff = files.map(f => f.patch).filter(Boolean).join("\n");
+  if (!diff) {
+    console.log("No diff to review.");
+    return;
+  }
+
+  // Step 3: Send diff to OpenAI GPT for review
+  const response = await openai.chat.completions.create({
+    model: "gpt-4",
+    messages: [
+      { role: "system", content: "You are a senior developer reviewing pull requests." },
+      { role: "user", content: `Please review this PR diff and suggest improvements:\n${diff}` }
+    ]
+  });
+
+  const aiComment = response.choices[0].message.content;
+
+  // Step 4: Post AI review comment on PR
+  await octokit.issues.createComment({
+    owner,
+    repo,
+    issue_number: prNumber,
+    body: `🤖 AI Review:\n\n${aiComment}`
+  });
+
+  console.log("AI review posted!");
 }
 
-run();
+run().catch(err => {
+  console.error("Error running bot:", err);
+  process.exit(1);
+});
