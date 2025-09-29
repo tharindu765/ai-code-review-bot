@@ -14,7 +14,7 @@ async function generateReview(diffText) {
   if (!diffText) return "No diff provided.";
 
   const response = await fetch(
-    "https://api-inference.huggingface.co/models/JetBrains-Research/cmg-codereviewer-with-history", {
+    "https:api-inference.huggingface.co/models/bigcode/starcoder", {
       method: "POST",
       headers: {
         Authorization: `Bearer ${hfKey}`,
