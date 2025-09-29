@@ -14,7 +14,7 @@ async function generateReview(diffText) {
   if (!diffText) return "No diff provided.";
 
   const response = await fetch(
-    "https:api-inference.huggingface.co/models/bigcode/starcoder", {
+    "https:api-inference.huggingface.co/models/HuggingFaceH4/zephyr-7b-beta", {
       method: "POST",
       headers: {
         Authorization: `Bearer ${hfKey}`,
