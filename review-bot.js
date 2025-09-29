@@ -15,23 +15,26 @@ const prNumber = process.env.PR_NUMBER;
 
 const hfKey = process.env.HF_API_KEY;
 
-// Example: Using the "text-generation" pipeline (like GPT)
+// Example: Using the "text-generation" pipeline (like hugging face)
 async function generateReview(diffText) {
+  if (!diffText) return "No diff provided.";
+
   const response = await fetch("https://api-inference.huggingface.co/models/bigcode/starcoder", {
-  method: "POST",
-  headers: {
-    "Authorization": `Bearer ${hfKey}`,
-    "Content-Type": "application/json"
-  },
-  body: JSON.stringify({
-    inputs: `Review this PR diff and suggest improvements:\n${diff}`,
-    options: { wait_for_model: true }
-  })
-});
+    method: "POST",
+    headers: {
+      "Authorization": `Bearer ${hfKey}`,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      inputs: `Review this PR diff and suggest improvements:\n${diffText}`,
+      options: { wait_for_model: true }
+    })
+  });
 
   const result = await response.json();
-  return result[0]?.generated_text || "No review generated.";
+  return result[0]?.generated_text || result?.generated_text || "No review generated.";
 }
+
 
 async function run() {
   // Step 1: Post initial comment
