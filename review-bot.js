@@ -17,17 +17,17 @@ const hfKey = process.env.HF_API_KEY;
 
 // Example: Using the "text-generation" pipeline (like GPT)
 async function generateReview(diffText) {
-  const response = await fetch("https://api-inference.huggingface.co/models/gpt2", {
-    method: "POST",
-    headers: {
-      "Authorization": `Bearer ${hfKey}`,
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({
-      inputs: `Review this PR diff and suggest improvements:\n${diffText}`,
-      options: { wait_for_model: true }
-    })
-  });
+  const response = await fetch("https://api-inference.huggingface.co/models/bigcode/starcoder", {
+  method: "POST",
+  headers: {
+    "Authorization": `Bearer ${hfKey}`,
+    "Content-Type": "application/json"
+  },
+  body: JSON.stringify({
+    inputs: `Review this PR diff and suggest improvements:\n${diff}`,
+    options: { wait_for_model: true }
+  })
+});
 
   const result = await response.json();
   return result[0]?.generated_text || "No review generated.";
