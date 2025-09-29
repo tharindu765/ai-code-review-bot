@@ -1,5 +1,5 @@
 // review-bot.js
-import { Octokit } from "@octokit/rest";
+const { Octokit } = require("@octokit/rest");
 
 const token = process.env.GITHUB_TOKEN; // GitHub provides this in Actions
 const octokit = new Octokit({ auth: token });
