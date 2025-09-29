@@ -36,7 +36,7 @@ async function run() {
 
   // Step 3: Send diff to OpenAI GPT for review
   const response = await openai.chat.completions.create({
-    model: "gpt-4",
+    model: "gpt-3.5-turbo",
     messages: [
       { role: "system", content: "You are a senior developer reviewing pull requests." },
       { role: "user", content: `Please review this PR diff and suggest improvements:\n${diff}` }
