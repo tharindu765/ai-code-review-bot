@@ -1,44 +1,40 @@
 const { Octokit } = require("@octokit/rest");
 const fetch = require("node-fetch"); // CJS
 
-// GitHub token & Hugging Face API key
+// GitHub token & DeepSeek API key
 const githubToken = process.env.GITHUB_TOKEN;
-const hfKey = process.env.HF_API_KEY;
+const deepseekKey = process.env.DEEPSEEK_API_KEY;
 
 const octokit = new Octokit({ auth: githubToken });
 const [owner, repo] = process.env.GITHUB_REPOSITORY.split("/");
 const prNumber = process.env.PR_NUMBER;
 
-// Generate review using Hugging Face model
+// Generate review using DeepSeek
 async function generateReview(diffText) {
   if (!diffText) return "No diff provided.";
 
-  const response = await fetch(
-    "https://api-inference.huggingface.co/models/distilbert-base-uncased", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${hfKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        inputs: `Review this PR diff and suggest improvements:\n${diffText}`,
-        options: { wait_for_model: true },
-      }),
-    }
-  );
+  const response = await fetch("https://api.deepseek.com/chat/completions", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${deepseekKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      model: "deepseek-coder", // best for code
+      messages: [
+        { role: "system", content: "You are a senior code reviewer. Be concise and helpful." },
+        { role: "user", content: `Review this PR diff and suggest improvements:\n${diffText}` }
+      ]
+    }),
+  });
 
   const data = await response.json();
 
-  // Hugging Face returns either array of outputs or object with generated_text
-  if (Array.isArray(data) && data[0]?.generated_text) {
-    return data[0].generated_text;
-  } else if (data.generated_text) {
-    return data.generated_text;
-  } else if (data.error) {
-    return `Error from model: ${data.error}`;
+  if (data.error) {
+    return `Error from DeepSeek: ${data.error.message}`;
   }
 
-  return "No review generated.";
+  return data.choices?.[0]?.message?.content || "No review generated.";
 }
 
 async function run() {
@@ -48,7 +44,7 @@ async function run() {
       owner,
       repo,
       issue_number: prNumber,
-      body: "👋 Thanks for the PR! The bot is reviewing your code...",
+      body: "👋 Thanks for the PR! The AI bot is reviewing your code...",
     });
 
     // Step 2: Fetch changed files and diffs
