@@ -20,6 +20,7 @@
   "homepage": "https://github.com/tharindu765/ai-code-review-bot#readme",
   "dependencies": {
     "@octokit/rest": "^22.0.0",
+    "node-fetch": "^2.7.0",
     "openai": "^5.23.1"
   }
 }
