@@ -14,7 +14,7 @@ async function generateReview(diffText) {
   if (!diffText) return "No diff provided.";
 
   const response = await fetch(
-    "https://api-inference.huggingface.co/models/gpt2", {
+    "https://api-inference.huggingface.co/models/deepseek-ai/DeepSeek-V3-0324", {
       method: "POST",
       headers: {
         Authorization: `Bearer ${hfKey}`,
