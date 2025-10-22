@@ -1,6 +1,9 @@
 const { Octokit } = require("@octokit/rest");
 const fetch = require("node-fetch"); // CJS
 
+
+const geminiKey = process.env.GEMINI_API_KEY;
+
 // GitHub token & DeepSeek API key
 const githubToken = process.env.GITHUB_TOKEN;
 const deepseekKey = process.env.DEEPSEEK_API_KEY;
@@ -13,28 +16,36 @@ const prNumber = process.env.PR_NUMBER;
 async function generateReview(diffText) {
   if (!diffText) return "No diff provided.";
 
-  const response = await fetch("https://api.deepseek.com/chat/completions", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${deepseekKey}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      model: "deepseek-coder", // best for code
-      messages: [
-        { role: "system", content: "You are a senior code reviewer. Be concise and helpful." },
-        { role: "user", content: `Review this PR diff and suggest improvements:\n${diffText}` }
-      ]
-    }),
-  });
+  const prompt = `
+You are a senior software engineer reviewing a pull request diff.
+Please list issues and suggest improvements.
+Respond clearly and concisely.
+
+Code diff:
+${diffText}
+`;
+
+  const response = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiKey}`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: prompt }] }],
+      }),
+    }
+  );
 
   const data = await response.json();
 
   if (data.error) {
-    return `Error from DeepSeek: ${data.error.message}`;
+    return `Error from Gemini: ${data.error.message}`;
   }
 
-  return data.choices?.[0]?.message?.content || "No review generated.";
+  return (
+    data?.candidates?.[0]?.content?.parts?.[0]?.text ||
+    "No review generated."
+  );
 }
 
 async function run() {
