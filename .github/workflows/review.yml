@@ -21,6 +21,7 @@ jobs:
       - name: Run Bot
         run: |
           npm install
+          npm install node-fetch@2
           node review-bot.js
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
